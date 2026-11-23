@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面部表观年龄临床盲评工作台（120题）</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --ink: #1a202c;
+    --muted: #64748b;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --border: #e2e8f0;
+    --ok: #059669;
+    --err: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--ink); min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+  }
+  .wrap { width: 100%; max-width: 820px; padding: 20px 16px 40px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 24px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05); margin-bottom: 16px;
+  }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  p { margin: 6px 0; line-height: 1.6; color: var(--muted); font-size: 14px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+  input, select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 15px; outline: none; background: #fff;
+  }
+  input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; padding: 11px 20px;
+    background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 15px;
+    font-weight: 600; cursor: pointer; transition: background 0.15s;
+  }
+  .btn:hover { background: var(--primary-hover); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-sec { background: #e2e8f0; color: #1e293b; }
+  .btn-sec:hover { background: #cbd5e1; }
+  .btn-ok { background: var(--ok); }
+  .btn-ok:hover { background: #047857; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--muted); }
+  .bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 16px; }
+  .bar-fill { height: 100%; background: var(--primary); transition: width 0.2s; }
+  .stage { display: flex; flex-direction: column; align-items: center; }
+  .img-box {
+    width: 100%; max-width: 460px; height: 460px; background: #0f172a; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 16px; position: relative;
+  }
+  .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+  .img-loading { position: absolute; color: #94a3b8; font-size: 13px; pointer-events: none; }
+  .prompt-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; text-align: center; }
+  .age-row { display: flex; gap: 10px; align-items: center; justify-content: center; width: 100%; max-width: 420px; }
+  .age-input {
+    width: 140px; font-size: 26px; font-weight: 700; text-align: center; padding: 8px 12px;
+    border: 2px solid var(--primary); border-radius: 10px;
+  }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 10px; text-align: center; }
+  .err-banner { color: var(--err); font-size: 13.5px; font-weight: 600; margin-top: 10px; min-height: 20px; }
+  .hidden { display: none !important; }
+  .badge { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Setup Card -->
+  <div id="setup-view" class="card">
+    <h1>面部表观年龄临床盲评工作台（120 题 · 约 12 分钟）</h1>
+    <p>本盲评用于评估临床医师对人像<b>感知表观年龄（Apparent Age，岁）</b>的判读精密度与重测信度，作为人工智能面部年龄终点验证研究的人类临床参照基准。全部图像均来自公开授权科研人脸库（CC BY 4.0）。</p>
+    <p style="color:#0f172a;font-weight:500;">📌 评分规则（请务必阅读）：</p>
+    <ul style="font-size:13.5px;color:#334155;line-height:1.7;margin:4px 0 14px;padding-left:20px;">
+      <li>请凭您的第一临床直觉，估计<b>照片中人物看起来像几岁</b>（输入 <b>15–90</b> 之间的整数岁数，如 <code>42</code>）。</li>
+      <li><b>操作极快</b>：键盘直接输入两位数字后按 <b>回车键（Enter）</b> 即自动跳下一张；每张自动本地保存，中途关闭网页再打开可无缝续评。</li>
+      <li>请独立完成，勿与他人讨论，也不要使用任何外部工具。全部 120 张评完后点击按钮下载 <code>.json</code> 或一键复制结果发回汇总人即可。</li>
+    </ul>
+    <div class="form-grid">
+      <div>
+        <label>您的姓名或拼音缩写（如 WQQ / 魏清茜）*</label>
+        <input id="rater-id" type="text" placeholder="例如：WQQ" />
+      </div>
+      <div>
+        <label>职称层级 *</label>
+        <select id="rater-role">
+          <option value="resident">住院医师 / 专培医师 / 临床研究生</option>
+          <option value="attending">主治医师</option>
+          <option value="associate_chief">副主任医师</option>
+          <option value="chief">主任医师</option>
+        </select>
+      </div>
+      <div>
+        <label>临床专科 *</label>
+        <select id="rater-spec">
+          <option value="plastic_surgery">整形美容外科</option>
+          <option value="injectables_dermatology">微创注射 / 美容皮肤科</option>
+          <option value="craniofacial">颅颌面外科</option>
+          <option value="other_clinical">其他临床专科</option>
+        </select>
+      </div>
+      <div>
+        <label>本专业从业/临床年限（数字，如 3）*</label>
+        <input id="rater-years" type="text" inputmode="decimal" placeholder="例如：3（研究生可填 1 或 0）" />
+      </div>
+    </div>
+    <div style="margin-top:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <button type="button" id="btn-start" class="btn">开始 / 继续盲评 →</button>
+      <span id="resume-hint" style="font-size:13px;color:#059669;"></span>
+    </div>
+    <div id="setup-err" class="err-banner"></div>
+  </div>
+
+  <!-- Rating Card -->
+  <div id="rate-view" class="card hidden">
+    <div class="topbar">
+      <span>评分人：<b id="lbl-rater"></b></span>
+      <span>进度：<span class="badge" id="lbl-prog">1 / 120</span></span>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" id="prog-bar" style="width:0%"></div></div>
+
+    <div class="stage">
+      <div class="img-box">
+        <span id="img-loading" class="img-loading">图片加载中…</span>
+        <img id="face-img" src="" alt="Portrait" />
+      </div>
+      <div class="prompt-title">这张照片中的人物看起来大约几岁？（整数岁）</div>
+      <div class="age-row">
+        <button type="button" class="btn btn-sec" id="btn-prev" title="返回上一张修改">← 上一张</button>
+        <input id="age-in" class="age-input" type="number" inputmode="numeric" pattern="[0-9]*" min="12" max="95" step="1" placeholder="岁" autocomplete="off" />
+        <button type="button" class="btn" id="btn-next">确认 (Enter) →</button>
+      </div>
+      <div id="err-msg" class="err-banner" style="text-align:center;"></div>
+      <div class="hint">快捷键：直接敲数字 + 按 <b>Enter</b> 下一张 ｜ 进度已实时自动保存在本浏览器</div>
+    </div>
+  </div>
+
+  <!-- Done Card -->
+  <div id="done-view" class="card hidden" style="text-align:center;padding:36px 24px;">
+    <h1 style="font-size:24px;color:#059669;">🎉 全部 120 张盲评已完成！</h1>
+    <p style="font-size:15px;color:#334155;margin:12px 0 22px;">非常感谢您的支持！电脑端请点击下方绿色按钮下载 <code>.json</code> 文件；若在<b>手机微信</b>内无法下载，请直接点蓝色按钮<b>一键复制结果文本</b>，粘贴发给课题汇总人即可。</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button type="button" class="btn btn-ok" id="btn-dl">⬇ 下载评分结果 (.json)</button>
+      <button type="button" class="btn" id="btn-copy">📋 一键复制结果文本（手机/微信推荐）</button>
+      <button type="button" class="btn btn-sec" id="btn-back-last">← 返回检查最后一题</button>
+    </div>
+    <div id="copy-status" style="margin-top:12px;font-size:13px;color:#059669;min-height:20px;"></div>
+    <textarea id="result-box" readonly style="width:100%;height:110px;margin-top:10px;font-family:monospace;font-size:11px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;display:none;"></textarea>
+  </div>
+</div>
+
+<script>
+const BASE_TRIALS = [{"sid":"S001","gid":6,"k":"I5d01c6b0cfc1"},{"sid":"S002","gid":16,"k":"I0b1931b29903"},{"sid":"S003","gid":1,"k":"I517c4977cc39"},{"sid":"S004","gid":0,"k":"I93b2c5509aee"},{"sid":"S005","gid":35,"k":"I9778f5a128bf"},{"sid":"S006","gid":27,"k":"Idbea0897c73c"},{"sid":"S007","gid":14,"k":"I2eecdd61f387"},{"sid":"S008","gid":11,"k":"Ic54430c10046"},{"sid":"S009","gid":22,"k":"If3451f3a36f3"},{"sid":"S010","gid":17,"k":"Ie418fba9d98e"},{"sid":"S011","gid":20,"k":"I9addc1461aa7"},{"sid":"S012","gid":5,"k":"Iab32384111b6"},{"sid":"S013","gid":31,"k":"Iad98760be8a1"},{"sid":"S014","gid":15,"k":"I067a00916e67"},{"sid":"S015","gid":7,"k":"I9cf0459868c9"},{"sid":"S016","gid":34,"k":"I383182824e3a"},{"sid":"S017","gid":4,"k":"I93f9711cee09"},{"sid":"S018","gid":30,"k":"Ia7e1d704f977"},{"sid":"S019","gid":14,"k":"I4dd0cd2ed7c9"},{"sid":"S020","gid":13,"k":"I013432f956f7"},{"sid":"S021","gid":37,"k":"I11207efd7858"},{"sid":"S022","gid":20,"k":"I7ae3082c6396"},{"sid":"S023","gid":11,"k":"If7067f594c78"},{"sid":"S024","gid":32,"k":"I702d9fa29800"},{"sid":"S025","gid":42,"k":"I9385f51a52a3"},{"sid":"S026","gid":29,"k":"Id554ef58b1fc"},{"sid":"S027","gid":39,"k":"Ia59fecfda693"},{"sid":"S028","gid":25,"k":"I1b3b485cbbf7"},{"sid":"S029","gid":9,"k":"Ib72a1fb31636"},{"sid":"S030","gid":43,"k":"I8e95332455d0"},{"sid":"S031","gid":16,"k":"I35844cc1dd97"},{"sid":"S032","gid":14,"k":"I68f607262118"},{"sid":"S033","gid":25,"k":"I1b3b485cbbf7"},{"sid":"S034","gid":40,"k":"I3cd9938a2e18"},{"sid":"S035","gid":2,"k":"I72eeda3867f5"},{"sid":"S036","gid":0,"k":"I107534bbb600"},{"sid":"S037","gid":7,"k":"Icdd0838eed8f"},{"sid":"S038","gid":3,"k":"I7d87fd687143"},{"sid":"S039","gid":9,"k":"Icd2d9250ffb4"},{"sid":"S040","gid":8,"k":"I9c72fe996f5a"},{"sid":"S041","gid":23,"k":"I8507dd5b63b4"},{"sid":"S042","gid":36,"k":"Ie4b7afbd6c79"},{"sid":"S043","gid":31,"k":"Iad98760be8a1"},{"sid":"S044","gid":37,"k":"I11207efd7858"},{"sid":"S045","gid":6,"k":"I5d01c6b0cfc1"},{"sid":"S046","gid":10,"k":"Ib265e7e16457"},{"sid":"S047","gid":28,"k":"I24be475d88dd"},{"sid":"S048","gid":8,"k":"I774a76c0358c"},{"sid":"S049","gid":10,"k":"I26525c21fe8c"},{"sid":"S050","gid":8,"k":"I9c72fe996f5a"},{"sid":"S051","gid":7,"k":"Ib6d92b0e380a"},{"sid":"S052","gid":21,"k":"Ie05ccda90e54"},{"sid":"S053","gid":0,"k":"I93b2c5509aee"},{"sid":"S054","gid":5,"k":"I416fe2be8b03"},{"sid":"S055","gid":21,"k":"I84890599bc1b"},{"sid":"S056","gid":11,"k":"I785bd01a1ab8"},{"sid":"S057","gid":38,"k":"I34a7bd07537a"},{"sid":"S058","gid":26,"k":"I66cbbf7f4950"},{"sid":"S059","gid":8,"k":"I844efd66c27a"},{"sid":"S060","gid":22,"k":"Iac3481063320"},{"sid":"S061","gid":27,"k":"Idbea0897c73c"},{"sid":"S062","gid":6,"k":"I1284b4d9148a"},{"sid":"S063","gid":39,"k":"Ia1a41575476c"},{"sid":"S064","gid":5,"k":"Iab32384111b6"},{"sid":"S065","gid":10,"k":"I01221551e99c"},{"sid":"S066","gid":10,"k":"I01221551e99c"},{"sid":"S067","gid":9,"k":"Idf1958d9d550"},{"sid":"S068","gid":19,"k":"Ie7ad8ab99fc7"},{"sid":"S069","gid":16,"k":"I537fbd4472e6"},{"sid":"S070","gid":17,"k":"I17beea1bb603"},{"sid":"S071","gid":24,"k":"I39213386b773"},{"sid":"S072","gid":12,"k":"I93d045950517"},{"sid":"S073","gid":13,"k":"Ic72567f1769f"},{"sid":"S074","gid":11,"k":"Icaba5e9df9bf"},{"sid":"S075","gid":16,"k":"If6e8437aae7b"},{"sid":"S076","gid":12,"k":"Iffe9c08a8f0d"},{"sid":"S077","gid":13,"k":"Ia421b2b33f6c"},{"sid":"S078","gid":26,"k":"I66cbbf7f4950"},{"sid":"S079","gid":44,"k":"Ib91c93c4a200"},{"sid":"S080","gid":19,"k":"I3ba61c4a5a42"},{"sid":"S081","gid":15,"k":"I6c1069c54339"},{"sid":"S082","gid":7,"k":"I56e279258902"},{"sid":"S083","gid":8,"k":"I4eae98697cc2"},{"sid":"S084","gid":18,"k":"I07e2c6ae5395"},{"sid":"S085","gid":15,"k":"Icfc780bc59ee"},{"sid":"S086","gid":34,"k":"I383182824e3a"},{"sid":"S087","gid":30,"k":"I1db3470e2f93"},{"sid":"S088","gid":2,"k":"Ib93febeed487"},{"sid":"S089","gid":1,"k":"I531ab36acea3"},{"sid":"S090","gid":10,"k":"I266dc7059f27"},{"sid":"S091","gid":24,"k":"I39213386b773"},{"sid":"S092","gid":14,"k":"I02ee629aa35b"},{"sid":"S093","gid":11,"k":"Ic54430c10046"},{"sid":"S094","gid":9,"k":"Ifaa581c9490b"},{"sid":"S095","gid":2,"k":"Ib93febeed487"},{"sid":"S096","gid":24,"k":"Ib9cbbbe528dc"},{"sid":"S097","gid":4,"k":"Iccbf872a4bfc"},{"sid":"S098","gid":27,"k":"If99de9714b58"},{"sid":"S099","gid":9,"k":"Idf1958d9d550"},{"sid":"S100","gid":33,"k":"Ibe3607318887"},{"sid":"S101","gid":13,"k":"I0843219e2fe6"},{"sid":"S102","gid":4,"k":"I93f9711cee09"},{"sid":"S103","gid":3,"k":"I7d87fd687143"},{"sid":"S104","gid":41,"k":"I3d8efdbf85f0"},{"sid":"S105","gid":1,"k":"I517c4977cc39"},{"sid":"S106","gid":7,"k":"I9cf0459868c9"},{"sid":"S107","gid":28,"k":"I24be475d88dd"},{"sid":"S108","gid":12,"k":"Ife5e401ea3ee"},{"sid":"S109","gid":12,"k":"Ifa938c8b3056"},{"sid":"S110","gid":17,"k":"I74e68d2928e5"},{"sid":"S111","gid":3,"k":"I018b387139c8"},{"sid":"S112","gid":17,"k":"I71944d92bd7e"},{"sid":"S113","gid":33,"k":"I151b7277b42f"},{"sid":"S114","gid":6,"k":"I25959463b3a8"},{"sid":"S115","gid":6,"k":"I930c116c0ab3"},{"sid":"S116","gid":15,"k":"I3bd6118afea4"},{"sid":"S117","gid":23,"k":"Ie96057370640"},{"sid":"S118","gid":40,"k":"I3cd9938a2e18"},{"sid":"S119","gid":18,"k":"I645f57dbc9e6"},{"sid":"S120","gid":29,"k":"Id554ef58b1fc"}];
+
+function hashStr(s) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function buildSpacedOrder(seedStr) {
+  const rand = mulberry32(hashStr(seedStr.toUpperCase().trim() || "DEFAULT"));
+  const items = BASE_TRIALS.map(x => ({...x}));
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  const out = [];
+  const pool = items.slice();
+  const lastSeen = {};
+  for (let step = 0; step < BASE_TRIALS.length; step++) {
+    const remCount = {};
+    for (const it of pool) remCount[it.gid] = (remCount[it.gid] || 0) + 1;
+    let bestIdx = 0;
+    let bestScore = -1e9;
+    for (let i = 0; i < pool.length; i++) {
+      const g = pool[i].gid;
+      const dist = (g in lastSeen) ? (step - lastSeen[g]) : 999;
+      const minGap = 14;
+      const penalty = dist < minGap ? (dist - minGap) * 1000 : 0;
+      const urgency = remCount[g] * 12 + rand() * 5;
+      const sc = penalty + urgency;
+      if (sc > bestScore) {
+        bestScore = sc;
+        bestIdx = i;
+      }
+    }
+    const chosen = pool.splice(bestIdx, 1)[0];
+    lastSeen[chosen.gid] = step;
+    out.push(chosen);
+  }
+  return out;
+}
+
+const STORAGE_KEY = "medaes_age_reader_v1";
+let state = null;
+let deck = [];
+let cardShownAt = 0;
+const preloadCache = new Set();
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+function preloadAhead(startIdx) {
+  for (let k = startIdx; k < Math.min(deck.length, startIdx + 5); k++) {
+    const url = `imgs/${deck[k].k}.jpg`;
+    if (url && !preloadCache.has(url)) {
+      preloadCache.add(url);
+      const im = new Image();
+      im.src = url;
+    }
+  }
+}
+
+function startSession() {
+  const errEl = document.getElementById("setup-err");
+  errEl.textContent = "";
+  const raterId = document.getElementById("rater-id").value.trim().toUpperCase();
+  const role = document.getElementById("rater-role").value;
+  const spec = document.getElementById("rater-spec").value;
+  const rawYears = document.getElementById("rater-years").value.trim();
+  const numMatch = rawYears.match(/\d+(\.\d+)?/);
+  const years = numMatch ? parseFloat(numMatch[0]) : NaN;
+
+  if (!raterId) {
+    errEl.textContent = "⚠️ 请先填写您的姓名或拼音缩写（如 WQQ）！";
+    document.getElementById("rater-id").focus();
+    return;
+  }
+  if (isNaN(years) || years < 0 || years > 60) {
+    errEl.textContent = "⚠️ 请先填写从业/临床年限数字（例如 3，研究生可填 1 或 0）！";
+    document.getElementById("rater-years").focus();
+    return;
+  }
+
+  const saved = loadSaved();
+  if (saved && saved.raterId === raterId && saved.responses) {
+    state = saved;
+    state.role = role;
+    state.spec = spec;
+    state.years = years;
+  } else {
+    state = {
+      version: "clinician_age_reader_v1",
+      raterId, role, spec, years,
+      startedAt: new Date().toISOString(),
+      idx: 0,
+      responses: {}
+    };
+  }
+  deck = buildSpacedOrder(raterId);
+  let firstOpen = deck.findIndex(t => !(t.sid in state.responses));
+  state.idx = firstOpen === -1 ? deck.length : firstOpen;
+  saveState();
+  render();
+}
+
+function render() {
+  document.getElementById("setup-view").classList.add("hidden");
+  if (state.idx >= deck.length) {
+    document.getElementById("rate-view").classList.add("hidden");
+    document.getElementById("done-view").classList.remove("hidden");
+    return;
+  }
+  document.getElementById("done-view").classList.add("hidden");
+  document.getElementById("rate-view").classList.remove("hidden");
+
+  const t = deck[state.idx];
+  document.getElementById("lbl-rater").textContent = state.raterId;
+  document.getElementById("lbl-prog").textContent = `${state.idx + 1} / ${deck.length}`;
+  document.getElementById("prog-bar").style.width = `${((state.idx) / deck.length * 100).toFixed(1)}%`;
+
+  const imgEl = document.getElementById("face-img");
+  const loadEl = document.getElementById("img-loading");
+  loadEl.style.display = "block";
+  imgEl.onload = () => { loadEl.style.display = "none"; };
+  imgEl.onerror = () => { loadEl.textContent = "图片加载失败，请刷新重试"; };
+  imgEl.src = `imgs/${t.k}.jpg`;
+  if (imgEl.complete && imgEl.naturalWidth > 0) loadEl.style.display = "none";
+  preloadAhead(state.idx + 1);
+
+  document.getElementById("btn-prev").disabled = (state.idx === 0);
+  document.getElementById("err-msg").textContent = "";
+
+  const inp = document.getElementById("age-in");
+  const prevResp = state.responses[t.sid];
+  inp.value = prevResp ? prevResp.age : "";
+  cardShownAt = performance.now();
+  setTimeout(() => { inp.focus(); inp.select(); }, 30);
+}
+
+function submitCurrent() {
+  const inp = document.getElementById("age-in");
+  const raw = inp.value.trim();
+  const val = Number(raw);
+  if (!raw || !Number.isInteger(val) || val < 12 || val > 95) {
+    document.getElementById("err-msg").textContent = "请输入 12 至 95 之间的整数年龄！";
+    inp.focus();
+    return;
+  }
+  const t = deck[state.idx];
+  const rtMs = Math.round(performance.now() - cardShownAt);
+  state.responses[t.sid] = {
+    age: val,
+    order: state.idx + 1,
+    rt_ms: rtMs,
+    ts: new Date().toISOString()
+  };
+  state.idx += 1;
+  if (state.idx >= deck.length) {
+    state.completedAt = new Date().toISOString();
+  }
+  saveState();
+  render();
+}
+
+function prevTrial() {
+  if (state.idx > 0) {
+    state.idx -= 1;
+    saveState();
+    render();
+  }
+}
+
+function reviewLast() {
+  state.idx = deck.length - 1;
+  render();
+}
+
+function buildPayload() {
+  return {
+    study: "2026-11-ai-age-audit-clinician-reader-120",
+    rater_id: state.raterId,
+    role: state.role,
+    specialty: state.spec,
+    experience_years: state.years,
+    started_at: state.startedAt,
+    completed_at: state.completedAt || new Date().toISOString(),
+    n_completed: Object.keys(state.responses).length,
+    order_sids: deck.map(x => x.sid),
+    responses: state.responses
+  };
+}
+
+function downloadJSON() {
+  const payload = buildPayload();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  const ts = new Date().toISOString().slice(0,10);
+  a.download = `clinician_age_rating_${state.raterId}_${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function copyCompactResult() {
+  const p = buildPayload();
+  const compact = {
+    study: p.study,
+    rater_id: p.rater_id,
+    role: p.role,
+    specialty: p.specialty,
+    experience_years: p.experience_years,
+    completed_at: p.completed_at,
+    ages: Object.fromEntries(Object.entries(p.responses).map(([k, v]) => [k, v.age]))
+  };
+  const txt = JSON.stringify(compact);
+  const box = document.getElementById("result-box");
+  box.style.display = "block";
+  box.value = txt;
+  box.select();
+  const st = document.getElementById("copy-status");
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => {
+      st.textContent = "✅ 已复制到剪贴板！直接去微信粘贴发送即可。";
+    }).catch(() => {
+      document.execCommand("copy");
+      st.textContent = "✅ 已选中下方文本框，长按或按 Ctrl/Cmd+C 复制发回即可。";
+    });
+  } else {
+    document.execCommand("copy");
+    st.textContent = "✅ 已选中下方文本框，长按或按 Ctrl/Cmd+C 复制发回即可。";
+  }
+}
+
+// Bind events immediately
+document.getElementById("btn-start").addEventListener("click", startSession);
+document.getElementById("btn-prev").addEventListener("click", prevTrial);
+document.getElementById("btn-next").addEventListener("click", submitCurrent);
+document.getElementById("btn-dl").addEventListener("click", downloadJSON);
+document.getElementById("btn-copy").addEventListener("click", copyCompactResult);
+document.getElementById("btn-back-last").addEventListener("click", reviewLast);
+document.getElementById("rater-years").addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter") { ev.preventDefault(); startSession(); }
+});
+document.getElementById("age-in").addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter") { ev.preventDefault(); submitCurrent(); }
+});
+
+const savedInit = loadSaved();
+if (savedInit && savedInit.raterId) {
+  document.getElementById("rater-id").value = savedInit.raterId;
+  document.getElementById("rater-role").value = savedInit.role || "resident";
+  document.getElementById("rater-spec").value = savedInit.spec || "plastic_surgery";
+  document.getElementById("rater-years").value = (savedInit.years !== undefined ? savedInit.years : "");
+  const nDone = Object.keys(savedInit.responses || {}).length;
+  document.getElementById("resume-hint").textContent = `检测到本地已保存进度（已完成 ${nDone} / 120 题），点击直接续评`;
+}
+</script>
+</body>
+</html>
